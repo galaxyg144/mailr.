@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mailr.</title>
+    <link rel="stylesheet" href="src/style.css">
+</head>
+
+<body>
+    <header>
+        <div class="logo">mailr.</div>
+        <div class="header-right">
+            <span id="loginStatus">Not logged in</span>
+            <a href="src/kg.html" target="_blank">keygen</a>
+            <a onclick="showRegisterModal()">register</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-item active" onclick="showView('inbox')">Inbox <span id="unreadCount"></span></div>
+            <div class="sidebar-item" onclick="showView('spam')">Spam</div>
+            <div class="sidebar-item" onclick="showView('trash')">Trash</div>
+            <div class="sidebar-item" onclick="showView('compose')">Send</div>
+        </div>
+
+        <div class="main-content">
+            <!-- Inbox View -->
+            <div id="inboxView" class="view">
+                <div class="content-header">Inbox</div>
+                <div class="content-body" id="inboxMessages">
+                    <div class="empty-state">No messages yet</div>
+                </div>
+            </div>
+
+            <!-- Spam View -->
+            <div id="spamView" class="view" style="display: none;">
+                <div class="content-header">Spam</div>
+                <div class="content-body">
+                    <div class="empty-state">No spam messages</div>
+                </div>
+            </div>
+
+            <!-- Trash View -->
+            <div id="trashView" class="view" style="display: none;">
+                <div class="content-header">Trash</div>
+                <div class="content-body">
+                    <div class="empty-state">Trash is empty</div>
+                </div>
+            </div>
+
+            <!-- Compose View -->
+            <div id="composeView" class="view" style="display: none;">
+                <div class="content-header">Compose Message</div>
+                <div class="content-body">
+                    <form class="compose-form" onsubmit="sendMessage(event)">
+                        <div class="form-group">
+                            <label>To:</label>
+                            <input type="text" id="recipient" placeholder="john-doe or full address" required>
+                            <div class="note">Enter username (auto-appends #mailr.qwert) or full address like
+                                <b>mailr~mailr.qwert</b>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Subject:</label>
+                            <input type="text" id="subject" placeholder="Subject" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Message:</label>
+                            <textarea id="body" placeholder="Type your message here..." required></textarea>
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" id="global">
+                            <label for="global" style="margin: 0;">Global message (visible to all)</label>
+                        </div>
+                        <button type="submit" class="btn">Send</button>
+                        <button type="button" class="btn btn-secondary" onclick="showView('inbox')">Cancel</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Register New Account</div>
+            <form onsubmit="register(event)">
+                <div class="form-group">
+                    <label>Username:</label>
+                    <div class="username-input-group">
+                        <input type="text" id="regUsername" placeholder="john-doe" pattern="[a-zA-Z0-9\-]+" required>
+                        <span class="username-suffix">#mailr.qwert</span>
+                    </div>
+                    <div class="note">No spaces allowed. Use hyphens for multi-word names.</div>
+                </div>
+                <div class="form-group">
+                    <label>Role:</label>
+                    <input type="text" id="regRole" value="#" readonly class="readonly-input">
+                    <div class="note">Only regular users (#) can register via the web</div>
+                </div>
+                <div class="form-group">
+                    <label>Public Key:</label>
+                    <textarea id="regPublicKey" rows="3" placeholder="Paste your public key here" required></textarea>
+                    <div class="note">Generate a keypair using mailrKey.py</div>
+                </div>
+                <button type="submit" class="btn">Register</button>
+                <button type="button" class="btn btn-secondary" onclick="closeRegisterModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Login</div>
+            <form onsubmit="login(event)">
+                <div class="form-group">
+                    <label>Username:</label>
+                    <div class="username-input-group">
+                        <input type="text" id="loginUsername" placeholder="john-doe" required>
+                        <span class="username-suffix" id="loginSuffix">#mailr.qwert</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Role:</label>
+                    <select id="loginRole" onchange="updateLoginSuffix()"
+                        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 3px;">
+                        <option value="#"># (Regular User)</option>
+                        <option value="$">$ (Admin)</option>
+                        <option value="~">~ (System)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Private Key</label>
+                    <div style="display: flex; gap: 10px; flex-direction: column;">
+                        <textarea id="loginPrivateKey" rows="2" placeholder="Paste your Private Key JSON here"
+                            style="font-family: monospace; font-size: 11px;"></textarea>
+
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <label class="btn btn-secondary"
+                                style="cursor: pointer; display: inline-block; padding: 5px 10px; font-size: 13px; margin: 0;">
+                                📂 Upload Key File
+                                <input type="file" id="loginKeyFile" accept=".key,.txt,.json" style="display: none;"
+                                    onchange="handleKeyFileUpload(this)">
+                            </label>
+
+                            <label
+                                style="display: flex; align-items: center; gap: 5px; font-size: 13px; cursor: pointer;">
+                                <input type="checkbox" id="rememberMe"> Remember Me
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn">Login</button>
+                <button type="button" class="btn btn-secondary" onclick="closeLoginModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+
+
+    <script src="src/app.js"></script>
+    <script>
+        // Update login suffix when role changes
+        function updateLoginSuffix() {
+            const role = document.getElementById('loginRole').value;
+            document.getElementById('loginSuffix').textContent = `${role}mailr.qwert`;
+        }
+    </script>
+</body>
+
+</html>
