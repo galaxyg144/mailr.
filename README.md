@@ -1,7 +1,6 @@
 # mailr.
-<<<<<<< HEAD
+
 Im a "special" kind of extra. so im making my own mail client out of standard norms.
-=======
 
 A lightweight, secure local messaging system featuring cryptographic authentication and role-based access control.
 
@@ -50,4 +49,3 @@ python3 mailrKey.py
 
 ## License
 MIT License. See `LICENSE` for details.
->>>>>>> 640c7da (Initialize project and prepare for GitHub)
